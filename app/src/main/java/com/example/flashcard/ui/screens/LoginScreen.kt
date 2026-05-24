@@ -12,6 +12,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -20,17 +22,19 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import com.example.flashcard.ui.components.CustomTextField
 import com.example.flashcard.ui.components.GradientButton
-import com.example.flashcard.ui.theme.IndigoContainer
 import com.example.flashcard.ui.theme.IndigoPrimary
+import com.example.flashcard.ui.theme.OrangeContainer
+import com.example.flashcard.ui.theme.OrangeEnd
+import com.example.flashcard.ui.theme.OrangeStart
 import com.example.flashcard.ui.theme.RoseRed
+import com.example.flashcard.ui.theme.WarmBackground
 
 @Composable
 fun LoginScreen(
@@ -43,7 +47,15 @@ fun LoginScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(IndigoContainer.copy(alpha = 0.35f))
+            .background(
+                Brush.verticalGradient(
+                    listOf(
+                        OrangeStart.copy(alpha = 0.9f),
+                        OrangeEnd.copy(alpha = 0.46f),
+                        WarmBackground
+                    )
+                )
+            )
             .padding(24.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
@@ -54,12 +66,12 @@ fun LoginScreen(
                 fontWeight = FontWeight.ExtraBold,
                 fontSize = 38.sp
             ),
-            color = IndigoPrimary
+            color = MaterialTheme.colorScheme.onPrimary
         )
         Text(
             text = "Không gian học tập bằng thẻ ghi nhớ",
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.86f)
         )
 
         Spacer(modifier = Modifier.height(28.dp))
@@ -67,7 +79,7 @@ fun LoginScreen(
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            colors = CardDefaults.cardColors(containerColor = OrangeContainer.copy(alpha = 0.96f)),
             elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
         ) {
             Column(

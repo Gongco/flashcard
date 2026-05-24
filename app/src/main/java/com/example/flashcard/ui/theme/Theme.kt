@@ -1,6 +1,5 @@
 package com.example.flashcard.ui.theme
 
-import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
@@ -29,18 +28,20 @@ private val LightColorScheme = lightColorScheme(
     secondary = VioletSecondary,
     tertiary = Pink40,
     background = LightBackground,
-    surface = Color.White,
+    surface = WarmSurface,
     onPrimary = Color.White,
     onSecondary = Color.White,
-    onBackground = Color(0xFF0F172A),
-    onSurface = Color(0xFF1E293B)
+    onBackground = Color(0xFF2B1708),
+    onSurface = Color(0xFF3B2413),
+    surfaceVariant = OrangeContainer,
+    onSurfaceVariant = Color(0xFF7A4A20)
 )
 
 @Composable
 fun FlashcardTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
