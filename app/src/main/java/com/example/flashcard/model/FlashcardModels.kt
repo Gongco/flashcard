@@ -23,6 +23,14 @@ data class Flashcard(
     val updatedAt: Long = System.currentTimeMillis()
 )
 
+data class ReviewHistory(
+    val id: Long = 0,
+    val cardId: Long,
+    val deckId: Long,
+    val isCorrect: Boolean,
+    val reviewedAt: Long = System.currentTimeMillis()
+)
+
 enum class Screen {
     LOGIN,
     HOME,

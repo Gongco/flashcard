@@ -19,11 +19,19 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -32,22 +40,29 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.flashcard.model.Deck
 import com.example.flashcard.model.Flashcard
+import com.example.flashcard.model.ReviewHistory
 import com.example.flashcard.ui.components.GradientButton
 import com.example.flashcard.ui.theme.EmeraldGreen
 import com.example.flashcard.ui.theme.IndigoContainer
 import com.example.flashcard.ui.theme.IndigoPrimary
 import com.example.flashcard.ui.theme.RoseRed
 import com.example.flashcard.ui.theme.VioletSecondary
+import java.util.Calendar
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StatsScreen(
     decks: List<Deck>,
     cards: List<Flashcard>,
+    reviewHistory: List<ReviewHistory>,
     dueCards: List<Flashcard>,
     onBackClick: () -> Unit
 ) {
-    val totalCorrect = cards.sumOf { it.correctCount }
-    val totalWrong = cards.sumOf { it.wrongCount }
+    var selectedPeriod by remember { mutableStateOf(StatsPeriod.DAY) }
+    val periodStart = remember(selectedPeriod) { selectedPeriod.startMillis() }
+    val filteredHistory = reviewHistory.filter { it.reviewedAt >= periodStart }
+    val totalCorrect = filteredHistory.count { it.isCorrect }
+    val totalWrong = filteredHistory.count { !it.isCorrect }
     val totalReviews = totalCorrect + totalWrong
     val successRate = if (totalReviews == 0) 0 else totalCorrect * 100 / totalReviews
 
@@ -76,6 +91,20 @@ fun StatsScreen(
             )
         }
 
+        SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+            StatsPeriod.entries.forEachIndexed { index, period ->
+                SegmentedButton(
+                    selected = selectedPeriod == period,
+                    onClick = { selectedPeriod = period },
+                    shape = SegmentedButtonDefaults.itemShape(
+                        index = index,
+                        count = StatsPeriod.entries.size
+                    ),
+                    label = { Text(period.label) }
+                )
+            }
+        }
+
         Box(
             modifier = Modifier.fillMaxWidth(),
             contentAlignment = Alignment.Center
@@ -91,9 +120,16 @@ fun StatsScreen(
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
                         text = "$successRate%",
-                        style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.ExtraBold, fontSize = 36.sp)
+                        style = MaterialTheme.typography.headlineLarge.copy(
+                            fontWeight = FontWeight.ExtraBold,
+                            fontSize = 36.sp
+                        )
                     )
-                    Text("Tỉ lệ nhớ", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(
+                        text = "Tỉ lệ nhớ",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             }
         }
@@ -105,7 +141,7 @@ fun StatsScreen(
             }
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 StatCard("Cần ôn", dueCards.size.toString(), EmeraldGreen, Modifier.weight(1f))
-                StatCard("Đã nhớ", cards.count { it.isMastered }.toString(), IndigoPrimary, Modifier.weight(1f))
+                StatCard("Lượt ôn", totalReviews.toString(), IndigoPrimary, Modifier.weight(1f))
             }
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 StatCard("Đúng", totalCorrect.toString(), EmeraldGreen, Modifier.weight(1f))
@@ -115,6 +151,42 @@ fun StatsScreen(
 
         Spacer(modifier = Modifier.weight(1f))
         GradientButton(text = "Quay lại", onClick = onBackClick, modifier = Modifier.fillMaxWidth())
+    }
+}
+
+private enum class StatsPeriod(val label: String) {
+    DAY("Ngày"),
+    WEEK("Tuần"),
+    MONTH("Tháng");
+
+    fun startMillis(): Long {
+        val calendar = Calendar.getInstance()
+        when (this) {
+            DAY -> {
+                calendar.set(Calendar.HOUR_OF_DAY, 0)
+                calendar.set(Calendar.MINUTE, 0)
+                calendar.set(Calendar.SECOND, 0)
+                calendar.set(Calendar.MILLISECOND, 0)
+            }
+
+            WEEK -> {
+                calendar.firstDayOfWeek = Calendar.MONDAY
+                calendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
+                calendar.set(Calendar.HOUR_OF_DAY, 0)
+                calendar.set(Calendar.MINUTE, 0)
+                calendar.set(Calendar.SECOND, 0)
+                calendar.set(Calendar.MILLISECOND, 0)
+            }
+
+            MONTH -> {
+                calendar.set(Calendar.DAY_OF_MONTH, 1)
+                calendar.set(Calendar.HOUR_OF_DAY, 0)
+                calendar.set(Calendar.MINUTE, 0)
+                calendar.set(Calendar.SECOND, 0)
+                calendar.set(Calendar.MILLISECOND, 0)
+            }
+        }
+        return calendar.timeInMillis
     }
 }
 

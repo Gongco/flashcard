@@ -11,6 +11,7 @@ import com.example.flashcard.data.local.AppDatabase
 import com.example.flashcard.data.repository.FlashcardRepository
 import com.example.flashcard.model.Deck
 import com.example.flashcard.model.Flashcard
+import com.example.flashcard.model.ReviewHistory
 import com.example.flashcard.model.Screen
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -21,7 +22,11 @@ import java.util.concurrent.TimeUnit
 
 class FlashcardViewModel(application: Application) : AndroidViewModel(application) {
     private val database = AppDatabase.getInstance(application)
-    private val repository = FlashcardRepository(database.deckDao(), database.flashcardDao())
+    private val repository = FlashcardRepository(
+        database.deckDao(),
+        database.flashcardDao(),
+        database.reviewHistoryDao()
+    )
 
     val decks: StateFlow<List<Deck>> = repository.decks.stateIn(
         scope = viewModelScope,
@@ -30,6 +35,12 @@ class FlashcardViewModel(application: Application) : AndroidViewModel(applicatio
     )
 
     val cards: StateFlow<List<Flashcard>> = repository.cards.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = emptyList()
+    )
+
+    val reviewHistory: StateFlow<List<ReviewHistory>> = repository.reviewHistory.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
         initialValue = emptyList()
@@ -162,6 +173,14 @@ class FlashcardViewModel(application: Application) : AndroidViewModel(applicatio
         }
         viewModelScope.launch {
             repository.updateCard(updated)
+            repository.addReviewHistory(
+                ReviewHistory(
+                    cardId = card.id,
+                    deckId = card.deckId,
+                    isCorrect = quality != ReviewQuality.FORGOT,
+                    reviewedAt = now
+                )
+            )
         }
     }
 

@@ -12,6 +12,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import com.example.flashcard.model.Deck
 import com.example.flashcard.model.Flashcard
+import com.example.flashcard.model.ReviewHistory
 import com.example.flashcard.model.Screen
 import com.example.flashcard.ui.screens.AddCardScreen
 import com.example.flashcard.ui.screens.DeckDetailScreen
@@ -27,6 +28,7 @@ import com.example.flashcard.viewmodel.FlashcardViewModel
 fun FlashcardApp(viewModel: FlashcardViewModel) {
     val decks by viewModel.decks.collectAsState()
     val cards by viewModel.cards.collectAsState()
+    val reviewHistory by viewModel.reviewHistory.collectAsState()
     val dueCards by viewModel.dueCards.collectAsState()
     val selectedDeck = decks.firstOrNull { it.id == viewModel.selectedDeckId }
     val selectedDeckCards = cards.filter { it.deckId == viewModel.selectedDeckId }
@@ -53,6 +55,7 @@ fun FlashcardApp(viewModel: FlashcardViewModel) {
                 viewModel = viewModel,
                 decks = decks,
                 cards = cards,
+                reviewHistory = reviewHistory,
                 dueCards = dueCards,
                 selectedDeck = selectedDeck,
                 selectedDeckCards = selectedDeckCards,
@@ -67,6 +70,7 @@ private fun AppScreenContent(
     viewModel: FlashcardViewModel,
     decks: List<Deck>,
     cards: List<Flashcard>,
+    reviewHistory: List<ReviewHistory>,
     dueCards: List<Flashcard>,
     selectedDeck: Deck?,
     selectedDeckCards: List<Flashcard>,
@@ -125,6 +129,7 @@ private fun AppScreenContent(
             Screen.STATS -> StatsScreen(
                 decks = decks,
                 cards = cards,
+                reviewHistory = reviewHistory,
                 dueCards = dueCards,
                 onBackClick = { viewModel.navigateTo(Screen.HOME) }
             )
