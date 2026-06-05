@@ -1,6 +1,7 @@
 package com.example.flashcard.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -18,23 +19,35 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.flashcard.model.Deck
 import com.example.flashcard.model.Flashcard
+import com.example.flashcard.ui.components.CustomTextField
 import com.example.flashcard.ui.components.GradientButton
+import com.example.flashcard.ui.theme.EmeraldGreen
+import com.example.flashcard.ui.theme.FlashcardTheme
 import com.example.flashcard.ui.theme.IndigoContainer
 import com.example.flashcard.ui.theme.IndigoPrimary
 import com.example.flashcard.ui.theme.RoseRed
@@ -46,11 +59,36 @@ fun DeckDetailScreen(
     onBackClick: () -> Unit,
     onAddCardClick: () -> Unit,
     onReviewClick: () -> Unit,
+    onUpdateDeck: (Deck, String, String, String, String) -> Unit,
+    onDeleteDeck: (Deck) -> Unit,
+    onUpdateCard: (Flashcard, String, String, String) -> Unit,
     onDeleteCard: (Flashcard) -> Unit
 ) {
+    var editingDeck by remember { mutableStateOf(false) }
+    var deletingDeck by remember { mutableStateOf(false) }
+    var editingCard by remember { mutableStateOf<Flashcard?>(null) }
+    var deletingCard by remember { mutableStateOf<Flashcard?>(null) }
+    var searchText by remember { mutableStateOf("") }
+    var filterMode by remember { mutableStateOf("all") }
+
     if (deck == null) {
         EmptyState("Không tìm thấy bộ thẻ.")
         return
+    }
+
+    val now = System.currentTimeMillis()
+    val filteredCards = cards.filter { card ->
+        val matchesSearch = searchText.isBlank() ||
+            card.frontText.contains(searchText, ignoreCase = true) ||
+            card.backText.contains(searchText, ignoreCase = true) ||
+            card.note.contains(searchText, ignoreCase = true)
+
+        val matchesFilter = when (filterMode) {
+            "due" -> card.nextReviewAt <= now
+            "mastered" -> card.isMastered
+            else -> true
+        }
+        matchesSearch && matchesFilter
     }
 
     Column(
@@ -80,6 +118,12 @@ fun DeckDetailScreen(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
+            IconButton(onClick = { editingDeck = true }) {
+                Icon(Icons.Default.Edit, contentDescription = "Sửa bộ thẻ", tint = IndigoPrimary)
+            }
+            IconButton(onClick = { deletingDeck = true }) {
+                Icon(Icons.Default.Delete, contentDescription = "Xóa bộ thẻ", tint = RoseRed)
+            }
             IconButton(
                 onClick = onAddCardClick,
                 modifier = Modifier
@@ -99,30 +143,117 @@ fun DeckDetailScreen(
             onClick = onReviewClick,
             enabled = cards.isNotEmpty(),
             modifier = Modifier.fillMaxWidth(),
-            icon = { Icon(Icons.Default.PlayArrow, contentDescription = null, tint = androidx.compose.ui.graphics.Color.White) }
+            icon = { Icon(Icons.Default.PlayArrow, contentDescription = null, tint = Color.White) }
         )
+
+        CustomTextField(
+            value = searchText,
+            onValueChange = { searchText = it },
+            label = "Tìm thẻ",
+            placeholder = "Nhập câu hỏi, câu trả lời hoặc ghi chú"
+        )
+
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FilterButton("Tất cả", filterMode == "all", Modifier.weight(1f)) { filterMode = "all" }
+            FilterButton("Cần ôn", filterMode == "due", Modifier.weight(1f)) { filterMode = "due" }
+            FilterButton("Đã nhớ", filterMode == "mastered", Modifier.weight(1f)) { filterMode = "mastered" }
+        }
 
         if (cards.isEmpty()) {
             EmptyState("Bộ này chưa có thẻ nào. Hãy thêm thẻ đầu tiên.")
+        } else if (filteredCards.isEmpty()) {
+            EmptyState("Không tìm thấy thẻ phù hợp.")
         } else {
             LazyColumn(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                items(cards, key = { it.id }) { card ->
-                    CardRow(card = card, onDelete = { onDeleteCard(card) })
+                items(filteredCards, key = { it.id }) { card ->
+                    CardRow(
+                        card = card,
+                        onEdit = { editingCard = card },
+                        onDelete = { deletingCard = card }
+                    )
                 }
             }
         }
     }
+
+    if (editingDeck) {
+        DeckEditDialog(
+            deck = deck,
+            onDismiss = { editingDeck = false },
+            onSave = { name, description, category, language ->
+                onUpdateDeck(deck, name, description, category, language)
+                editingDeck = false
+            }
+        )
+    }
+
+    if (deletingDeck) {
+        ConfirmDeleteDialog(
+            title = "Xóa bộ thẻ?",
+            message = "Toàn bộ thẻ trong \"${deck.name}\" cũng sẽ bị xóa.",
+            onDismiss = { deletingDeck = false },
+            onConfirm = {
+                onDeleteDeck(deck)
+                deletingDeck = false
+                onBackClick()
+            }
+        )
+    }
+
+    editingCard?.let { card ->
+        CardEditDialog(
+            card = card,
+            onDismiss = { editingCard = null },
+            onSave = { frontText, backText, note ->
+                onUpdateCard(card, frontText, backText, note)
+                editingCard = null
+            }
+        )
+    }
+
+    deletingCard?.let { card ->
+        ConfirmDeleteDialog(
+            title = "Xóa thẻ?",
+            message = "Thẻ \"${card.frontText}\" sẽ bị xóa khỏi bộ này.",
+            onDismiss = { deletingCard = null },
+            onConfirm = {
+                onDeleteCard(card)
+                deletingCard = null
+            }
+        )
+    }
 }
 
 @Composable
-private fun CardRow(card: Flashcard, onDelete: () -> Unit) {
+private fun FilterButton(text: String, selected: Boolean, modifier: Modifier, onClick: () -> Unit) {
+    Card(
+        modifier = modifier.clickable { onClick() },
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (selected) IndigoPrimary else MaterialTheme.colorScheme.surface
+        )
+    ) {
+        Text(
+            text = text,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 10.dp),
+            color = if (selected) Color.White else MaterialTheme.colorScheme.onSurface,
+            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+        )
+    }
+}
+
+@Composable
+private fun CardRow(card: Flashcard, onEdit: () -> Unit, onDelete: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFFFC107)),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
@@ -144,14 +275,128 @@ private fun CardRow(card: Flashcard, onDelete: () -> Unit) {
                     )
                 }
             }
-            IconButton(
-                onClick = onDelete,
-                modifier = Modifier
-                    .clip(CircleShape)
-                    .background(RoseRed.copy(alpha = 0.1f))
-            ) {
+            IconButton(onClick = onEdit) {
+                Icon(Icons.Default.Edit, contentDescription = "Sửa thẻ", tint = IndigoPrimary)
+            }
+            IconButton(onClick = onDelete) {
                 Icon(Icons.Default.Delete, contentDescription = "Xóa thẻ", tint = RoseRed)
             }
         }
+    }
+}
+
+@Composable
+private fun DeckEditDialog(
+    deck: Deck,
+    onDismiss: () -> Unit,
+    onSave: (String, String, String, String) -> Unit
+) {
+    var name by remember(deck) { mutableStateOf(deck.name) }
+    var description by remember(deck) { mutableStateOf(deck.description) }
+    var category by remember(deck) { mutableStateOf(deck.category) }
+    var language by remember(deck) { mutableStateOf(deck.language) }
+    var error by remember(deck) { mutableStateOf("") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Sửa bộ thẻ") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                CustomTextField(name, { name = it; error = "" }, "Tên bộ thẻ", "Ví dụ: Cấu trúc dữ liệu")
+                CustomTextField(description, { description = it }, "Mô tả", "Nội dung ôn tập", singleLine = false, minLines = 2)
+                CustomTextField(category, { category = it }, "Lĩnh vực", "Ví dụ: Lập trình")
+                CustomTextField(language, { language = it }, "Ngôn ngữ", "Ví dụ: Tiếng Việt")
+                if (error.isNotBlank()) {
+                    Text(error, color = RoseRed, style = MaterialTheme.typography.bodySmall)
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    if (name.isBlank()) {
+                        error = "Vui lòng nhập tên bộ thẻ."
+                    } else {
+                        onSave(name, description, category, language)
+                    }
+                }
+            ) {
+                Text("Lưu")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Hủy")
+            }
+        }
+    )
+}
+
+@Composable
+private fun CardEditDialog(
+    card: Flashcard,
+    onDismiss: () -> Unit,
+    onSave: (String, String, String) -> Unit
+) {
+    var front by remember(card) { mutableStateOf(card.frontText) }
+    var back by remember(card) { mutableStateOf(card.backText) }
+    var note by remember(card) { mutableStateOf(card.note) }
+    var error by remember(card) { mutableStateOf("") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Sửa thẻ") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                CustomTextField(front, { front = it; error = "" }, "Mặt trước", "Câu hỏi", singleLine = false, minLines = 2)
+                CustomTextField(back, { back = it; error = "" }, "Mặt sau", "Câu trả lời", singleLine = false, minLines = 3)
+                CustomTextField(note, { note = it }, "Ghi chú", "Mẹo nhớ hoặc nguồn tài liệu", singleLine = false, minLines = 2)
+                if (error.isNotBlank()) {
+                    Text(error, color = RoseRed, style = MaterialTheme.typography.bodySmall)
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    if (front.isBlank() || back.isBlank()) {
+                        error = "Vui lòng nhập cả mặt trước và mặt sau."
+                    } else {
+                        onSave(front, back, note)
+                    }
+                }
+            ) {
+                Text("Lưu")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Hủy")
+            }
+        }
+    )
+}
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+fun DeckDetailScreenPreview() {
+    val mockDeck = Deck(1, "Guest", "Tiếng Anh chuyên ngành", "Từ vựng về CNTT", "Ngoại ngữ", "Tiếng Anh")
+    val mockCards = listOf(
+        Flashcard(1, 1, "Database", "Cơ sở dữ liệu"),
+        Flashcard(2, 1, "Algorithm", "Giải thuật", "Rất quan trọng")
+    )
+
+    FlashcardTheme {
+        DeckDetailScreen(
+            deck = mockDeck,
+            cards = mockCards,
+            onBackClick = {},
+            onAddCardClick = {},
+            onReviewClick = {},
+            onUpdateDeck = { _, _, _, _, _ -> },
+            onDeleteDeck = {},
+            onUpdateCard = { _, _, _, _ -> },
+            onDeleteCard = {}
+        )
     }
 }

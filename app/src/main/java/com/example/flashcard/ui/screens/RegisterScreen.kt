@@ -37,13 +37,14 @@ import com.example.flashcard.ui.theme.IndigoPrimary
 import com.example.flashcard.ui.theme.RoseRed
 
 @Composable
-fun LoginScreen(
+fun RegisterScreen(
     message: String,
-    onLogin: (String, String) -> Unit,
-    onNavigateToRegister: () -> Unit
+    onRegister: (String, String, String) -> Unit,
+    onNavigateToLogin: () -> Unit
 ) {
     var name by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var passwordConfirm by remember { mutableStateOf("") }
 
     Column(
         modifier = Modifier
@@ -80,21 +81,23 @@ fun LoginScreen(
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
                 Text(
-                    text = "Đăng nhập",
+                    text = "Đăng ký tài khoản",
                     style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
                     color = MaterialTheme.colorScheme.onSurface
                 )
+                
                 CustomTextField(
                     value = name,
                     onValueChange = { name = it },
                     label = "Tên người dùng",
                     placeholder = "Ví dụ: sinhvien01"
                 )
+                
                 OutlinedTextField(
                     value = password,
                     onValueChange = { password = it },
                     label = { Text("Mật khẩu") },
-                    placeholder = { Text("Nhập mật khẩu tài khoản") },
+                    placeholder = { Text("Nhập mật khẩu (từ 4 ký tự)") },
                     visualTransformation = PasswordVisualTransformation(),
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp),
@@ -105,6 +108,23 @@ fun LoginScreen(
                     ),
                     singleLine = true
                 )
+                
+                OutlinedTextField(
+                    value = passwordConfirm,
+                    onValueChange = { passwordConfirm = it },
+                    label = { Text("Xác nhận mật khẩu") },
+                    placeholder = { Text("Nhập lại mật khẩu để xác nhận") },
+                    visualTransformation = PasswordVisualTransformation(),
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = IndigoPrimary,
+                        focusedLabelColor = IndigoPrimary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
+                    ),
+                    singleLine = true
+                )
+                
                 if (message.isNotBlank()) {
                     Text(
                         text = message,
@@ -112,9 +132,10 @@ fun LoginScreen(
                         style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold)
                     )
                 }
+                
                 GradientButton(
-                    text = "Đăng nhập",
-                    onClick = { onLogin(name, password) },
+                    text = "Đăng ký",
+                    onClick = { onRegister(name, password, passwordConfirm) },
                     modifier = Modifier.fillMaxWidth()
                 )
                 
@@ -126,17 +147,17 @@ fun LoginScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Chưa có tài khoản? ",
+                        text = "Đã có tài khoản? ",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
-                        text = "Đăng ký ngay",
+                        text = "Đăng nhập",
                         style = MaterialTheme.typography.bodyMedium.copy(
                             fontWeight = FontWeight.Bold,
                             color = IndigoPrimary
                         ),
-                        modifier = Modifier.clickable { onNavigateToRegister() }
+                        modifier = Modifier.clickable { onNavigateToLogin() }
                     )
                 }
             }
@@ -146,8 +167,8 @@ fun LoginScreen(
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
-fun LoginScreenPreview() {
+fun RegisterScreenPreview() {
     FlashcardTheme {
-        LoginScreen(message = "", onLogin = { _, _ -> }, onNavigateToRegister = {})
+        RegisterScreen(message = "", onRegister = { _, _, _ -> }, onNavigateToLogin = {})
     }
 }
