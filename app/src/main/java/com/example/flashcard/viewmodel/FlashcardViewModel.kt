@@ -30,11 +30,14 @@ class FlashcardViewModel(application: Application) : AndroidViewModel(applicatio
     private val database = AppDatabase.getInstance(application)
     private val repository = FlashcardRepository(database.userDao(), database.deckDao(), database.flashcardDao())
 
+    // ID của user đang đăng nhập (dùng làm khóa ngoại cho Deck)
+    private val _currentUserId = MutableStateFlow(0L)
+
     private val _currentUserName = MutableStateFlow("")
     val currentUserNameState: StateFlow<String> = _currentUserName
 
-    val decks: StateFlow<List<Deck>> = _currentUserName.flatMapLatest { name ->
-        repository.decksByOwner(name)
+    val decks: StateFlow<List<Deck>> = _currentUserId.flatMapLatest { userId ->
+        repository.decksByOwner(userId)
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
@@ -71,6 +74,8 @@ class FlashcardViewModel(application: Application) : AndroidViewModel(applicatio
     var currentUserName by mutableStateOf("")
         private set
 
+    private var currentUserId by mutableLongStateOf(0L)
+
     var selectedDeckId by mutableLongStateOf(0L)
         private set
 
@@ -97,14 +102,17 @@ class FlashcardViewModel(application: Application) : AndroidViewModel(applicatio
                 loginMessage = "Tài khoản không tồn tại. Vui lòng đăng ký."
                 return@launch
             }
-            if (user.password != trimmedPassword) {
+            // So sánh mật khẩu bằng hash thay vì plain text
+            if (!repository.verifyPassword(user, trimmedPassword)) {
                 loginMessage = "Mật khẩu không đúng cho tài khoản này."
                 return@launch
             }
             loginMessage = ""
             registerMessage = ""
             currentUserName = trimmedName
+            currentUserId = user.id
             _currentUserName.value = trimmedName
+            _currentUserId.value = user.id
             currentScreen = Screen.HOME
             seedStarterDeckIfNeeded()
         }
@@ -130,12 +138,15 @@ class FlashcardViewModel(application: Application) : AndroidViewModel(applicatio
         }
 
         viewModelScope.launch {
-            val success = repository.register(trimmedName, trimmedPassword)
-            if (success) {
+            // register() giờ trả về userId (>0) hoặc -1 nếu tên đã tồn tại
+            val userId = repository.register(trimmedName, trimmedPassword)
+            if (userId > 0) {
                 registerMessage = ""
                 loginMessage = ""
                 currentUserName = trimmedName
+                currentUserId = userId
                 _currentUserName.value = trimmedName
+                _currentUserId.value = userId
                 currentScreen = Screen.HOME
                 seedStarterDeckIfNeeded()
             } else {
@@ -146,7 +157,9 @@ class FlashcardViewModel(application: Application) : AndroidViewModel(applicatio
 
     fun logout() {
         currentUserName = ""
+        currentUserId = 0L
         _currentUserName.value = ""
+        _currentUserId.value = 0L
         selectedDeckId = 0L
         loginMessage = ""
         registerMessage = ""
@@ -179,7 +192,7 @@ class FlashcardViewModel(application: Application) : AndroidViewModel(applicatio
         viewModelScope.launch {
             val deckId = repository.saveDeck(
                 Deck(
-                    ownerName = currentUserName,
+                    ownerId = currentUserId,
                     name = name.trim(),
                     description = description.trim(),
                     category = category.trim().ifBlank { "General" },
@@ -261,11 +274,11 @@ class FlashcardViewModel(application: Application) : AndroidViewModel(applicatio
 
     private fun seedStarterDeckIfNeeded() {
         viewModelScope.launch {
-            val count = repository.getDeckCountByOwner(currentUserName)
+            val count = repository.getDeckCountByOwner(currentUserId)
             if (count > 0) return@launch
             val deckId = repository.saveDeck(
                 Deck(
-                    ownerName = currentUserName,
+                    ownerId = currentUserId,
                     name = "Kotlin Basics",
                     description = "Starter cards for general study",
                     category = "Programming",

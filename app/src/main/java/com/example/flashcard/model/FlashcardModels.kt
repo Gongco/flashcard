@@ -2,7 +2,7 @@ package com.example.flashcard.model
 
 data class Deck(
     val id: Long = 0,
-    val ownerName: String,
+    val ownerId: Long,
     val name: String,
     val description: String = "",
     val category: String = "",

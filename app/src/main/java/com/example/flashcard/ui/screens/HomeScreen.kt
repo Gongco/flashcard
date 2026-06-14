@@ -438,8 +438,8 @@ fun EmptyState(message: String) {
 @Composable
 fun HomeScreenPreview() {
     val mockDecks = listOf(
-        Deck(1, "Guest", "Từ vựng Tiếng Anh", "Các từ vựng cơ bản", "Ngoại ngữ", "Tiếng Anh"),
-        Deck(2, "Guest", "Cấu trúc dữ liệu", "Giải thuật cơ bản", "Lập trình", "Tiếng Việt")
+        Deck(1, 1L, "Từ vựng Tiếng Anh", "Các từ vựng cơ bản", "Ngoại ngữ", "Tiếng Anh"),
+        Deck(2, 1L, "Cấu trúc dữ liệu", "Giải thuật cơ bản", "Lập trình", "Tiếng Việt")
     )
     val mockCards = listOf(
         Flashcard(1, 1, "Hello", "Xin chào"),

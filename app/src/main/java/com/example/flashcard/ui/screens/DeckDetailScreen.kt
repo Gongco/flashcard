@@ -474,7 +474,7 @@ private fun CardEditDialog(
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun DeckDetailScreenPreview() {
-    val mockDeck = Deck(1, "Guest", "Tiếng Anh chuyên ngành", "Từ vựng về CNTT", "Ngoại ngữ", "Tiếng Anh")
+    val mockDeck = Deck(1, 1L, "Tiếng Anh chuyên ngành", "Từ vựng về CNTT", "Ngoại ngữ", "Tiếng Anh")
     val mockCards = listOf(
         Flashcard(1, 1, "Database", "Cơ sở dữ liệu"),
         Flashcard(2, 1, "Algorithm", "Giải thuật", "Rất quan trọng")

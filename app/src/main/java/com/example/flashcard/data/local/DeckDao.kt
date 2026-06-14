@@ -9,11 +9,11 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface DeckDao {
-    @Query("SELECT * FROM decks WHERE ownerName = :ownerName ORDER BY createdAt DESC")
-    fun observeDecksByOwner(ownerName: String): Flow<List<DeckEntity>>
+    @Query("SELECT * FROM decks WHERE ownerId = :ownerId ORDER BY createdAt DESC")
+    fun observeDecksByOwner(ownerId: Long): Flow<List<DeckEntity>>
 
-    @Query("SELECT COUNT(*) FROM decks WHERE ownerName = :ownerName")
-    suspend fun getDeckCountByOwner(ownerName: String): Int
+    @Query("SELECT COUNT(*) FROM decks WHERE ownerId = :ownerId")
+    suspend fun getDeckCountByOwner(ownerId: Long): Int
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(deck: DeckEntity): Long
