@@ -215,11 +215,42 @@ private fun DeckProgressCard(deck: Deck, cards: List<Flashcard>, dueCount: Int) 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun StatsScreenPreview() {
-    val mockDecks = listOf(Deck(1, 1L, "Từ vựng IT", "", "Lập trình", "Tiếng Việt"))
+    val mockDecks = listOf(
+        Deck(
+            id = 1L,
+            ownerId = 1L,
+            name = "Từ vựng IT",
+            description = "",
+            category = "Lập trình",
+            language = "Tiếng Việt"
+        )
+    )
     val mockCards = listOf(
-        Flashcard(1, 1, "Variable", "Biến", correctCount = 10, wrongCount = 2),
-        Flashcard(2, 1, "Function", "Hàm", correctCount = 5, wrongCount = 5),
-        Flashcard(3, 1, "Class", "Lớp", correctCount = 8, wrongCount = 0, isMastered = true)
+        Flashcard(
+            id = 1L,
+            deckId = 1L,
+            frontText = "Variable",
+            backText = "Biến",
+            correctCount = 10,
+            wrongCount = 2
+        ),
+        Flashcard(
+            id = 2L,
+            deckId = 1L,
+            frontText = "Function",
+            backText = "Hàm",
+            correctCount = 5,
+            wrongCount = 5
+        ),
+        Flashcard(
+            id = 3L,
+            deckId = 1L,
+            frontText = "Class",
+            backText = "Lớp",
+            correctCount = 8,
+            wrongCount = 0,
+            isMastered = true
+        )
     )
 
     FlashcardTheme {
