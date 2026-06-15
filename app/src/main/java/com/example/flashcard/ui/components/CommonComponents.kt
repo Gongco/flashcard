@@ -1,10 +1,16 @@
 package com.example.flashcard.ui.components
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,8 +19,11 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -24,6 +33,7 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -203,6 +213,68 @@ fun FlipCard(
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun ThemeToggleButton(
+    isDark: Boolean,
+    onToggle: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val backgroundColor by animateColorAsState(
+        targetValue = if (isDark) Color(0xFF1E293B) else Color(0xFFE2E8F0),
+        animationSpec = tween(durationMillis = 300),
+        label = "ThemeBgColor"
+    )
+
+    val borderColor by animateColorAsState(
+        targetValue = if (isDark) Color(0xFF334155) else Color(0xFFCBD5E1),
+        animationSpec = tween(durationMillis = 300),
+        label = "ThemeBorderColor"
+    )
+
+    val thumbOffset by animateDpAsState(
+        targetValue = if (isDark) 24.dp else 2.dp,
+        animationSpec = spring(stiffness = Spring.StiffnessLow),
+        label = "ThemeThumbOffset"
+    )
+
+    val thumbColor by animateColorAsState(
+        targetValue = if (isDark) Color(0xFF38BDF8) else Color(0xFFF59E0B),
+        animationSpec = tween(durationMillis = 300),
+        label = "ThemeThumbColor"
+    )
+
+    Box(
+        modifier = modifier
+            .width(52.dp)
+            .height(28.dp)
+            .clip(CircleShape)
+            .background(backgroundColor)
+            .border(1.dp, borderColor, CircleShape)
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = onToggle
+            )
+            .padding(2.dp),
+        contentAlignment = Alignment.CenterStart
+    ) {
+        Box(
+            modifier = Modifier
+                .offset(x = thumbOffset)
+                .size(22.dp)
+                .clip(CircleShape)
+                .background(thumbColor),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = if (isDark) "🌙" else "☀️",
+                style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
+                textAlign = TextAlign.Center
+            )
         }
     }
 }

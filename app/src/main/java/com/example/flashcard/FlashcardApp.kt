@@ -19,6 +19,8 @@ import com.example.flashcard.viewmodel.FlashcardViewModel
 
 @Composable
 fun FlashcardApp(viewModel: FlashcardViewModel) {
+    val systemDark = androidx.compose.foundation.isSystemInDarkTheme()
+    val isDark = viewModel.isDarkTheme ?: systemDark
     val decks by viewModel.decks.collectAsState()
     val cards by viewModel.cards.collectAsState()
     val dueCards by viewModel.dueCards.collectAsState()
@@ -48,6 +50,8 @@ fun FlashcardApp(viewModel: FlashcardViewModel) {
                 decks = decks,
                 cards = cards,
                 dueCards = dueCards,
+                isDark = isDark,
+                onToggleTheme = { viewModel.toggleTheme(systemDark) },
                 onAddDeck = viewModel::addDeck,
                 onUpdateDeck = viewModel::updateDeck,
                 onDeleteDeck = viewModel::deleteDeck,

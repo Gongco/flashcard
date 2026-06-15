@@ -55,6 +55,7 @@ import com.example.flashcard.model.Deck
 import com.example.flashcard.model.Flashcard
 import com.example.flashcard.ui.components.CustomTextField
 import com.example.flashcard.ui.components.GradientButton
+import com.example.flashcard.ui.components.ThemeToggleButton
 import com.example.flashcard.ui.theme.EmeraldGreen
 import com.example.flashcard.ui.theme.FlashcardTheme
 import com.example.flashcard.ui.theme.IndigoContainer
@@ -68,6 +69,8 @@ fun HomeScreen(
     decks: List<Deck>,
     cards: List<Flashcard>,
     dueCards: List<Flashcard>,
+    isDark: Boolean,
+    onToggleTheme: () -> Unit,
     onAddDeck: (String, String, String, String) -> Unit,
     onUpdateDeck: (Deck, String, String, String, String) -> Unit,
     onDeleteDeck: (Deck) -> Unit,
@@ -101,7 +104,7 @@ fun HomeScreen(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = "Xin chào, $userName",
                     style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.ExtraBold),
@@ -113,13 +116,22 @@ fun HomeScreen(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            IconButton(
-                onClick = onLogout,
-                modifier = Modifier
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.surface)
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(Icons.AutoMirrored.Filled.ExitToApp, contentDescription = "Đăng xuất", tint = RoseRed)
+                ThemeToggleButton(
+                    isDark = isDark,
+                    onToggle = onToggleTheme
+                )
+                IconButton(
+                    onClick = onLogout,
+                    modifier = Modifier
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.surface)
+                ) {
+                    Icon(Icons.AutoMirrored.Filled.ExitToApp, contentDescription = "Đăng xuất", tint = RoseRed)
+                }
             }
         }
 
@@ -476,6 +488,8 @@ fun HomeScreenPreview() {
             decks = mockDecks,
             cards = mockCards,
             dueCards = mockCards,
+            isDark = false,
+            onToggleTheme = {},
             onAddDeck = { _, _, _, _ -> },
             onUpdateDeck = { _, _, _, _, _ -> },
             onDeleteDeck = {},

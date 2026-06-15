@@ -88,6 +88,14 @@ class FlashcardViewModel(application: Application) : AndroidViewModel(applicatio
     var registerMessage by mutableStateOf("")
         private set
 
+    var isDarkTheme by mutableStateOf<Boolean?>(null)
+        private set
+
+    fun toggleTheme(systemDark: Boolean) {
+        val current = isDarkTheme ?: systemDark
+        isDarkTheme = !current
+    }
+
     fun login(name: String, password: String) {
         if (name.isBlank() || password.isBlank()) {
             loginMessage = "Vui lòng nhập tên người dùng và mật khẩu."

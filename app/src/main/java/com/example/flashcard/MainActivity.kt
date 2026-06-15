@@ -19,7 +19,9 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         Log.d(LIFECYCLE_TAG, "onCreate")
         setContent {
-            FlashcardTheme {
+            val systemDark = androidx.compose.foundation.isSystemInDarkTheme()
+            val isDark = viewModel.isDarkTheme ?: systemDark
+            FlashcardTheme(darkTheme = isDark) {
                 FlashcardApp(viewModel)
             }
         }
