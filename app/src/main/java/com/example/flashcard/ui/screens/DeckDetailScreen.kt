@@ -26,7 +26,6 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -54,7 +53,6 @@ import com.example.flashcard.model.Deck
 import com.example.flashcard.model.Flashcard
 import com.example.flashcard.ui.components.CustomTextField
 import com.example.flashcard.ui.components.GradientButton
-import com.example.flashcard.ui.theme.EmeraldGreen
 import com.example.flashcard.ui.theme.FlashcardTheme
 import com.example.flashcard.ui.theme.IndigoContainer
 import com.example.flashcard.ui.theme.IndigoPrimary
@@ -151,7 +149,8 @@ fun DeckDetailScreen(
             onClick = onReviewClick,
             enabled = cards.isNotEmpty(),
             modifier = Modifier.fillMaxWidth(),
-            icon = { Icon(Icons.Default.PlayArrow, contentDescription = null, tint = Color.White) }
+            icon = { Icon(Icons.Default.PlayArrow, contentDescription = null, tint = Color.White
+            ) }
         )
 
         CustomTextField(
